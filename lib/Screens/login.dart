@@ -1,26 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:myapp/Listas/datos.dart';
+import 'package:myapp/providers/app_providers.dart';
 
-class EntradaScreen extends StatefulWidget {
+class EntradaScreen extends ConsumerWidget {
   const EntradaScreen({super.key});
 
   @override
-  State<EntradaScreen> createState() => _EntradaScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final usuariosValidos = ref.watch(usuariosProvider);
+    final username = TextEditingController();
+    final password = TextEditingController();
 
-class _EntradaScreenState extends State<EntradaScreen> {
-  final List<Datos> usuariosValidos = [
-    Datos(username: 'admin', password: '123456'),
-    Datos(username: 'Joel', password: '2008'),
-    Datos(username: 'Santiago', password: 'contraseña'),
-  ];
-
-  TextEditingController username = TextEditingController();
-  TextEditingController password = TextEditingController();
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
         child: Column(
@@ -42,7 +33,9 @@ class _EntradaScreenState extends State<EntradaScreen> {
             ),
             const SizedBox(height: 40),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
+                await ref.read(usuariosProvider.notifier).cargarUsuarios();
+
                 final usuarioIngresado = username.text.trim();
                 final passwordIngresada = password.text;
 
@@ -55,11 +48,12 @@ class _EntradaScreenState extends State<EntradaScreen> {
                   );
                   return;
                 }
-      
-                final validarUsuario = usuariosValidos.firstWhere(
-                  (usuario) => usuario.username == usuarioIngresado && usuario.password == passwordIngresada,
-                  orElse: () => Datos(username: '', password: ''),
-                ).username.isNotEmpty;
+
+                final validarUsuario = ref.read(usuariosProvider).any(
+                  (usuario) =>
+                      usuario.username == usuarioIngresado &&
+                      usuario.password == passwordIngresada,
+                );
 
                 if (validarUsuario) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -82,6 +76,12 @@ class _EntradaScreenState extends State<EntradaScreen> {
                 }
               },
               child: const Text('Ingresar'),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed: () => context.push('/form'),
+              icon: const Icon(Icons.person_add),
+              label: const Text('Crear usuario'),
             ),
           ],
         ),

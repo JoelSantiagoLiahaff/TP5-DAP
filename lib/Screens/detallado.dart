@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:myapp/Listas/datos.dart';
+import 'package:myapp/providers/app_providers.dart';
 
-class DetalladoScreen extends StatelessWidget {
+class DetalladoScreen extends ConsumerWidget {
   final Instrumentos instrumento;
 
   const DetalladoScreen({
@@ -10,7 +13,7 @@ class DetalladoScreen extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
         title: Text(instrumento.nombre),
@@ -24,9 +27,7 @@ class DetalladoScreen extends StatelessWidget {
               height: 300,
               fit: BoxFit.cover,
             ),
-
             const SizedBox(height: 20),
-
             Text(
               instrumento.nombre,
               style: const TextStyle(
@@ -34,9 +35,7 @@ class DetalladoScreen extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-
             const SizedBox(height: 20),
-
             Padding(
               padding: const EdgeInsets.all(16),
               child: Text(
@@ -44,6 +43,27 @@ class DetalladoScreen extends StatelessWidget {
                 style: const TextStyle(fontSize: 18),
                 textAlign: TextAlign.justify,
               ),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: () {
+                    context.push('/form', extra: instrumento);
+                  },
+                  icon: const Icon(Icons.edit),
+                  label: const Text('Modificar'),
+                ),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    ref.read(instrumentosProvider.notifier).eliminar(instrumento.id);
+                    context.pop();
+                  },
+                  icon: const Icon(Icons.delete),
+                  label: const Text('Eliminar'),
+                ),
+              ],
             ),
           ],
         ),

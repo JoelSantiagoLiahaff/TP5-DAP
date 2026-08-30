@@ -3,6 +3,17 @@ class Datos {
   String password;
 
   Datos({required this.username, required this.password});
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is Datos &&
+        other.username == username &&
+        other.password == password;
+  }
+
+  @override
+  int get hashCode => Object.hash(username, password);
 }
 
 class Instrumentos {
