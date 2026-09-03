@@ -9,25 +9,26 @@ class EntradaScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final usuariosValidos = ref.watch(usuariosProvider);
-    final username = TextEditingController();
-    final password = TextEditingController();
+    final emailController = TextEditingController();
+    final passwordController = TextEditingController();
 
     return Scaffold(
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text('Usuario', style: TextStyle(fontSize: 20)),
+            const Text('Email', style: TextStyle(fontSize: 20)),
             const SizedBox(height: 10),
             TextField(
-              controller: username,
+              controller: emailController,
+              keyboardType: TextInputType.emailAddress,
               decoration: const InputDecoration(border: OutlineInputBorder()),
             ),
             const SizedBox(height: 20),
             const Text('Contraseña', style: TextStyle(fontSize: 20)),
             const SizedBox(height: 10),
             TextField(
-              controller: password,
+              controller: passwordController,
               obscureText: true,
               decoration: const InputDecoration(border: OutlineInputBorder()),
             ),
@@ -36,10 +37,10 @@ class EntradaScreen extends ConsumerWidget {
               onPressed: () async {
                 await ref.read(usuariosProvider.notifier).cargarUsuarios();
 
-                final usuarioIngresado = username.text.trim();
-                final passwordIngresada = password.text;
+                final emailIngresado = emailController.text.trim();
+                final passwordIngresada = passwordController.text;
 
-                if (usuarioIngresado.isEmpty || passwordIngresada.isEmpty) {
+                if (emailIngresado.isEmpty || passwordIngresada.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Por favor, complete todos los campos'),
@@ -51,35 +52,36 @@ class EntradaScreen extends ConsumerWidget {
 
                 final validarUsuario = ref.read(usuariosProvider).any(
                   (usuario) =>
-                      usuario.username == usuarioIngresado &&
+                      usuario.email == emailIngresado &&
                       usuario.password == passwordIngresada,
                 );
 
                 if (validarUsuario) {
+                  ref.read(authProvider.notifier).login();
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Bienvenido, $usuarioIngresado'),
+                      content: Text('Bienvenido, $emailIngresado'),
                       duration: const Duration(seconds: 2),
                     ),
                   );
-                  username.clear();
-                  password.clear();
+                  emailController.clear();
+                  passwordController.clear();
                   context.go('/home');
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Usuario o contraseña incorrecta'),
+                      content: Text('Email o contraseña incorrectos'),
                       duration: Duration(seconds: 2),
                     ),
                   );
-                  password.clear();
+                  passwordController.clear();
                 }
               },
               child: const Text('Ingresar'),
             ),
             const SizedBox(height: 20),
             ElevatedButton.icon(
-              onPressed: () => context.push('/form'),
+              onPressed: () => context.push('/form', extra: 'usuario'),
               icon: const Icon(Icons.person_add),
               label: const Text('Crear usuario'),
             ),

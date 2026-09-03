@@ -16,6 +16,8 @@ void main() {
       nombre: 'Triángulo',
       descripcion: 'Instrumento de percusión',
       imagen: 'https://example.com/triangulo.png',
+      uso: 'Percusion',
+      tipo: 'Acustico',
     );
 
     container.read(instrumentosProvider.notifier).agregar(nuevoInstrumento);
@@ -33,13 +35,17 @@ void main() {
     final container = ProviderContainer();
     addTearDown(container.dispose);
 
-    final nuevoUsuario = Datos(username: 'nuevo', password: '1234');
+    final nuevoUsuario = Datos(
+      nombre: 'Usuario Nuevo',
+      email: 'nuevo@test.com',
+      password: '1234',
+    );
 
     await container.read(usuariosProvider.notifier).agregar(nuevoUsuario);
 
     expect(container.read(usuariosProvider), contains(nuevoUsuario));
 
-    await container.read(usuariosProvider.notifier).eliminar(nuevoUsuario.username);
+    await container.read(usuariosProvider.notifier).eliminar(nuevoUsuario.email);
 
     expect(container.read(usuariosProvider), isNot(contains(nuevoUsuario)));
   });
@@ -50,7 +56,11 @@ void main() {
     final container = ProviderContainer();
     addTearDown(container.dispose);
 
-    final nuevoUsuario = Datos(username: 'persistido', password: '4321');
+    final nuevoUsuario = Datos(
+      nombre: 'Persistido',
+      email: 'persistido@test.com',
+      password: '4321',
+    );
 
     await container.read(usuariosProvider.notifier).agregar(nuevoUsuario);
 
@@ -59,7 +69,7 @@ void main() {
 
     expect(listaGuardada, isNotNull);
     expect(
-      listaGuardada!.any((usuarioJson) => usuarioJson.contains('persistido')),
+      listaGuardada!.any((usuarioJson) => usuarioJson.contains('persistido@test.com')),
       isTrue,
     );
     expect(container.read(usuariosProvider), contains(nuevoUsuario));
@@ -68,8 +78,8 @@ void main() {
   test('carga usuarios guardados desde almacenamiento', () async {
     SharedPreferences.setMockInitialValues({
       'usuarios_guardados': [
-        '{"username":"guardado","password":"9999"}',
-        '{"username":"admin","password":"123456"}',
+        '{"nombre":"Guardado","email":"guardado@test.com","username":"Guardado","password":"9999"}',
+        '{"nombre":"Admin","email":"admin@app.com","username":"Admin","password":"123456"}',
       ],
     });
 
@@ -80,7 +90,11 @@ void main() {
 
     expect(
       container.read(usuariosProvider),
-      contains(Datos(username: 'guardado', password: '9999')),
+      contains(Datos(
+        nombre: 'Guardado',
+        email: 'guardado@test.com',
+        password: '9999',
+      )),
     );
   });
 }

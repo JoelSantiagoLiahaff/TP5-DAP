@@ -23,8 +23,8 @@ class DetalladoScreen extends ConsumerWidget {
           children: [
             Image.network(
               instrumento.imagen,
-              width: 300,
-              height: 300,
+              width: 100,
+              height: 100,
               fit: BoxFit.cover,
             ),
             const SizedBox(height: 20),
@@ -40,6 +40,22 @@ class DetalladoScreen extends ConsumerWidget {
               padding: const EdgeInsets.all(16),
               child: Text(
                 instrumento.descripcion,
+                style: const TextStyle(fontSize: 18),
+                textAlign: TextAlign.justify,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                'Uso: ${instrumento.uso}',
+                style: const TextStyle(fontSize: 18),
+                textAlign: TextAlign.justify,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                'Tipo: ${instrumento.tipo}',
                 style: const TextStyle(fontSize: 18),
                 textAlign: TextAlign.justify,
               ),

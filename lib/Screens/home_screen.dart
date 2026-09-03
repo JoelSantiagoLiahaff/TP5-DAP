@@ -19,7 +19,10 @@ class HomeScreen extends ConsumerWidget {
             icon: const Icon(Icons.add),
           ),
           IconButton(
-            onPressed: () => context.go('/login'),
+            onPressed: () {
+              ref.read(authProvider.notifier).logout();
+              context.go('/login');
+            },
             icon: const Icon(Icons.logout),
             tooltip: 'Cerrar sesión',
           ),

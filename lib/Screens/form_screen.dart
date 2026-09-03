@@ -18,34 +18,61 @@ class _FormScreenState extends ConsumerState<FormScreen> {
   late final TextEditingController _nombreController;
   late final TextEditingController _descripcionController;
   late final TextEditingController _imagenController;
-  late final TextEditingController _usuarioController;
+  late final TextEditingController _usoController;
+  late final TextEditingController _tipoController;
+  late final TextEditingController _nombreUsuarioController;
+  late final TextEditingController _emailUsuarioController;
   late final TextEditingController _passwordController;
+  late final TextEditingController _confirmPasswordController;
   bool _isInstrumentForm = true;
 
   @override
   void initState() {
     super.initState();
     final extra = widget.initialValue;
-    if (extra is Instrumentos) {
+    if (extra == 'usuario') {
+      _isInstrumentForm = false;
+      _nombreController = TextEditingController();
+      _descripcionController = TextEditingController();
+      _imagenController = TextEditingController();
+      _usoController = TextEditingController();
+      _tipoController = TextEditingController();
+      _nombreUsuarioController = TextEditingController();
+      _emailUsuarioController = TextEditingController();
+      _passwordController = TextEditingController();
+      _confirmPasswordController = TextEditingController();
+    } else if (extra is Instrumentos) {
       _isInstrumentForm = true;
       _nombreController = TextEditingController(text: extra.nombre);
       _descripcionController = TextEditingController(text: extra.descripcion);
       _imagenController = TextEditingController(text: extra.imagen);
-      _usuarioController = TextEditingController();
+      _usoController = TextEditingController(text: extra.uso);
+      _tipoController = TextEditingController(text: extra.tipo);
+      _nombreUsuarioController = TextEditingController();
+      _emailUsuarioController = TextEditingController();
       _passwordController = TextEditingController();
+      _confirmPasswordController = TextEditingController();
     } else if (extra is Datos) {
       _isInstrumentForm = false;
       _nombreController = TextEditingController();
       _descripcionController = TextEditingController();
       _imagenController = TextEditingController();
-      _usuarioController = TextEditingController(text: extra.username);
+      _usoController = TextEditingController();
+      _tipoController = TextEditingController();
+      _nombreUsuarioController = TextEditingController(text: extra.nombre);
+      _emailUsuarioController = TextEditingController(text: extra.email);
       _passwordController = TextEditingController(text: extra.password);
+      _confirmPasswordController = TextEditingController(text: extra.password);
     } else {
       _nombreController = TextEditingController();
       _descripcionController = TextEditingController();
       _imagenController = TextEditingController();
-      _usuarioController = TextEditingController();
+      _usoController = TextEditingController();
+      _tipoController = TextEditingController();
+      _nombreUsuarioController = TextEditingController();
+      _emailUsuarioController = TextEditingController();
       _passwordController = TextEditingController();
+      _confirmPasswordController = TextEditingController();
     }
   }
 
@@ -54,8 +81,12 @@ class _FormScreenState extends ConsumerState<FormScreen> {
     _nombreController.dispose();
     _descripcionController.dispose();
     _imagenController.dispose();
-    _usuarioController.dispose();
+    _usoController.dispose();
+    _tipoController.dispose();
+    _nombreUsuarioController.dispose();
+    _emailUsuarioController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -110,22 +141,64 @@ class _FormScreenState extends ConsumerState<FormScreen> {
                       validator: (value) =>
                           value == null || value.isEmpty ? 'Campo obligatorio' : null,
                     ),
+                    TextFormField(
+                      controller: _usoController,
+                      decoration: const InputDecoration(labelText: 'Uso'),
+                      validator: (value) =>
+                          value == null || value.isEmpty ? 'Campo obligatorio' : null,
+                    ),
+                    TextFormField(
+                      controller: _tipoController,
+                      decoration: const InputDecoration(labelText: 'Tipo'),
+                      validator: (value) =>
+                          value == null || value.isEmpty ? 'Campo obligatorio' : null,
+                    ),
                   ],
                 )
               else
                 Column(
                   children: [
                     TextFormField(
-                      controller: _usuarioController,
-                      decoration: const InputDecoration(labelText: 'Usuario'),
+                      controller: _nombreUsuarioController,
+                      decoration: const InputDecoration(labelText: 'Nombre'),
                       validator: (value) =>
-                          value == null || value.isEmpty ? 'Campo obligatorio' : null,
+                          value == null || value.trim().isEmpty ? 'Campo obligatorio' : null,
+                    ),
+                    TextFormField(
+                      controller: _emailUsuarioController,
+                      decoration: const InputDecoration(labelText: 'Email'),
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Campo obligatorio';
+                        }
+                        final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+                        if (!emailRegex.hasMatch(value.trim())) {
+                          return 'Email inválido';
+                        }
+                        return null;
+                      },
                     ),
                     TextFormField(
                       controller: _passwordController,
+                      obscureText: true,
                       decoration: const InputDecoration(labelText: 'Contraseña'),
                       validator: (value) =>
-                          value == null || value.isEmpty ? 'Campo obligatorio' : null,
+                          value == null || value.length < 6 ? 'Mínimo 6 caracteres' : null,
+                    ),
+                    TextFormField(
+                      controller: _confirmPasswordController,
+                      obscureText: true,
+                      decoration: const InputDecoration(labelText: 'Confirmar contraseña'),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Campo obligatorio';
+                        }
+                        if (value != _passwordController.text) {
+                          return 'Las contraseñas no coinciden';
+                        }
+                        return null;
+                      },
                     ),
                   ],
                 ),
@@ -139,6 +212,8 @@ class _FormScreenState extends ConsumerState<FormScreen> {
                         nombre: _nombreController.text.trim(),
                         descripcion: _descripcionController.text.trim(),
                         imagen: _imagenController.text.trim(),
+                        uso: _usoController.text.trim(),
+                        tipo: _tipoController.text.trim(),
                       );
 
                       if (extra is Instrumentos) {
@@ -148,7 +223,8 @@ class _FormScreenState extends ConsumerState<FormScreen> {
                       }
                     } else {
                       final usuario = Datos(
-                        username: _usuarioController.text.trim(),
+                        nombre: _nombreUsuarioController.text.trim(),
+                        email: _emailUsuarioController.text.trim(),
                         password: _passwordController.text.trim(),
                       );
 
