@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import 'package:myapp/Listas/datos.dart';
 import 'package:myapp/providers/app_providers.dart';
 
+// Formulario compartido: crea cuentas o agrega y modifica instrumentos.
 class FormScreen extends ConsumerStatefulWidget {
   final Object? initialValue;
 
@@ -26,10 +28,27 @@ class _FormScreenState extends ConsumerState<FormScreen> {
   late final TextEditingController _confirmPasswordController;
   bool _isInstrumentForm = true;
 
+  // Convierte los códigos técnicos de Firebase en mensajes comprensibles.
+  String _registroError(FirebaseAuthException error) {
+    switch (error.code) {
+      case 'email-already-in-use':
+        return 'Ya existe una cuenta con ese email';
+      case 'invalid-email':
+        return 'El email no tiene un formato válido';
+      case 'weak-password':
+        return 'La contraseña es demasiado débil';
+      case 'network-request-failed':
+        return 'No hay conexión con Firebase';
+      default:
+        return 'No se pudo crear la cuenta';
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     final extra = widget.initialValue;
+    // Los datos recibidos por la ruta determinan el modo y los valores iniciales.
     if (extra == 'usuario') {
       _isInstrumentForm = false;
       _nombreController = TextEditingController();
@@ -205,9 +224,11 @@ class _FormScreenState extends ConsumerState<FormScreen> {
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () async {
+                  // No se envían datos hasta que todos los validadores sean correctos.
                   if (_formKey.currentState!.validate()) {
                     if (_isInstrumentForm || isEditingInstrument) {
                       final instrumento = Instrumentos(
+                        // Al editar se conserva el ID; al crear, Firestore asigna uno.
                         id: (extra is Instrumentos ? extra.id : DateTime.now().millisecondsSinceEpoch.toString()),
                         nombre: _nombreController.text.trim(),
                         descripcion: _descripcionController.text.trim(),
@@ -216,25 +237,45 @@ class _FormScreenState extends ConsumerState<FormScreen> {
                         tipo: _tipoController.text.trim(),
                       );
 
-                      if (extra is Instrumentos) {
-                        ref.read(instrumentosProvider.notifier).actualizar(instrumento);
-                      } else {
-                        ref.read(instrumentosProvider.notifier).agregar(instrumento);
+                      try {
+                        if (extra is Instrumentos) {
+                          await ref
+                              .read(instrumentosProvider.notifier)
+                              .actualizar(instrumento);
+                        } else {
+                          await ref
+                              .read(instrumentosProvider.notifier)
+                              .agregar(instrumento);
+                        }
+                      } catch (_) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('No se pudo guardar el instrumento'),
+                            ),
+                          );
+                        }
+                        return;
                       }
                     } else {
-                      final usuario = Datos(
-                        nombre: _nombreUsuarioController.text.trim(),
-                        email: _emailUsuarioController.text.trim(),
-                        password: _passwordController.text.trim(),
-                      );
-
-                      if (extra is Datos) {
-                        await ref.read(usuariosProvider.notifier).actualizar(usuario);
-                      } else {
-                        await ref.read(usuariosProvider.notifier).agregar(usuario);
+                      try {
+                        await registrarUsuario(
+                          nombre: _nombreUsuarioController.text.trim(),
+                          email: _emailUsuarioController.text.trim(),
+                          password: _passwordController.text,
+                        );
+                      } on FirebaseAuthException catch (error) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(_registroError(error)),
+                            ),
+                          );
+                        }
+                        return;
                       }
                     }
-                    context.pop();
+                    if (context.mounted) context.pop();
                   }
                 },
                 child: const Text('Guardar'),
